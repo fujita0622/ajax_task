@@ -1,7 +1,6 @@
 <?php if (isset($_COOKIE['login_State'])) : ?>
   <p><?php echo $_COOKIE['login_State']; ?>様、ログイン済み</p>
-  <buttun type="buttun" value ="<?php setcookie('', '', time() - 1); ?>">
-
+  <button type="button" onclick="location.href='logout.php'">ログアウト</button>
   <?php exit; ?>
 <?php endif; ?>
 
@@ -38,7 +37,6 @@
           'login_password':$('#login_password').val()
         }
       })
-
       // Ajaxリクエストが成功した時発動
       .done(function (data) {
         $('.result').html(data);
