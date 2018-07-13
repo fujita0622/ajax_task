@@ -35,16 +35,17 @@
         data:{
           'login_id':$('#login_id').val(),
           'login_password':$('#login_password').val()
-      }
+        }
     }
     // Ajaxリクエストが成功した時発動
-    .done((data) {
+    .done(function (data) {
       $('.result').html('OK');
     })
     // Ajaxリクエストが失敗した時発動
-    .fail((data) {
+    .fail(function (data) {
       $('.result').html('NO');
     })
-    });
+    );
+  });
   });
  </script>
