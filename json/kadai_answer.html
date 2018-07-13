@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<!-- htmlを定義する -->
+<html lang="ja">
+<!-- Headタグにページの基本情報を設定する -->
+<head>
+    <!-- ページタイトル -->
+    <title>JSONテスト</title>
+    <!-- 文字コード -->
+    <meta charset="utf-8">
+    <!-- ajaxを使用するためにjqueryライブラリを読み込む -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <!-- JS処理 -->
+    <script type="text/javascript">
+        /**
+         * 対象のタグに、引数のkey、valueを出力する
+         * @param targetSelector string 出力対象となるタグのセレクタ
+         * @param arrayKey string 出力対象の配列のkey
+         * @param arrayValue string 出力対象の配列のvalue
+         */
+        function exportHTML(targetSelector, arrayKey, arrayValue) {
+            //対象のタグにkey、valueを追記する
+            $(targetSelector).append('jsonのkey:' + arrayKey + ', jsonのvalue: ' + arrayValue + '<br>');
+        }
+
+        /**
+         * 第2階層の配列までループして、値の出力を行う。（第3階層以降も配列の場合には対応していないので注意）
+         * @param jsonArray array 出力対象の値
+         */
+        function exportArrayNormal(jsonArray) {
+            //取得したjsonデータについて、ループして全データを画面に出す。
+            $.each(jsonArray, function(jsonKey, jsonValue) {
+                //出力対象の値が配列型の場合
+                if ( typeof jsonValue == 'object' ) {
+                    //配列名を表示する
+                    $('#typeArray').append('配列名:' + jsonKey + '<br>');
+                    //Jsonデータに入っている配列をループでさらに取り出して表示する
+                    $.each(jsonValue, function(jsonInKey, jsonInValue) {
+                        //配列型の領域に対象値を出力する
+                        exportHTML('#typeArray', jsonInKey, jsonInValue);
+                    });  // json内部の画面出力ループ end
+                //配列型以外の出力
+                } else {
+                    //配列型以外の領域に対象値を出力する
+                    exportHTML('#typeOther', jsonKey, jsonValue);
+                }
+            });  // jsonの出力ループ end
+        }   // function exportArrayNormal end
+
+        /**
+         * 配列がなくなるまで再帰して出力を行う。（再帰の練習用処理。この処理は第3階層以降が配列であったも問題ない。）
+         * @param targetSelector string 出力対象となるタグのセレクタ
+         * @param jsonArray array 出力対象の値
+         */
+        function exportArraySaiki(targetSelector, jsonArray) {
+            // 対象の値について、ループして全データを画面に出す。
+            $.each(jsonArray, function(jsonKey, jsonValue) {
+                //出力対象の値が配列型の場合、再帰を行い、出力する。
+                if ( typeof jsonValue == 'object' ) {
+                    //どの配列名を出力するかを明確化する。
+                    $('#typeArray').append('配列名:' + jsonKey + '<br>');
+                    //再帰（自関数をコール）して、配列がなくなるまで出力を行う。
+                    exportArraySaiki('#typeArray', jsonValue);
+                //配列型ではない場合のみ、画面出力を行う。
+                } else {
+                    //対象の値の画面出力を行う
+                    exportHTML(targetSelector, jsonKey, jsonValue);
+                }
+            });  // jsonの出力ループ end
+        }   // function exportArraySaiki end
+
+        //ページ読み込み時に実行する内容
+        $(function(){
+            // ログインボタン(#ajax)を押した時に実行する関数を定義
+            $('#ajax').on('click', function(){
+                // Ajax通信を$.ajaxメソッド内に定義
+                $.ajax({
+                    // アクセス先のパス：practice.json
+                    url:'json/practice.json',
+                    // 通信に利用するHTTPメソッド：POST
+                    type:'POST',
+                    // 送信するデータ(特になにも送信しない)
+                    data:{}
+                })  // ajax end
+                // Ajaxリクエストが成功した時発動。ブラウザで実際に処理を行う実処理部分。
+                .done(function (data) {
+                    //コンソールにログを出す。
+                    // TODO：確認用なので本番リリース時には消す
+                    console.log(data);
+                    //再帰処理ではない、通常のデータ出力
+                    exportArrayNormal(data);
+                    //再帰を使ったときと使わなかったときでも結果が同じであると明確化するために、切り分けの文言をセットする
+                    $('#typeArray').append('<p><b>これより下の処理は、「再帰」を使用した処理</b></p>');
+                    $('#typeOther').append('<p><b>これより下の処理は、「再帰」を使用した処理</b></p>');
+                    // 再帰処理でのデータ出力
+                    exportArraySaiki('#typeOther', data);
+                })  // done end
+                // Ajaxリクエストが失敗した時発動
+                .fail(function (data) {
+                    $('.result').html('ajaxに失敗しました。');
+                })  // fail end
+            });  // clickイベント end
+        });  // ページ読み込み処理 end
+    </script>
+</head>
+<!-- HTMLのメイン表示領域 -->
+<body>
+    <!-- HTMLページのタイトル -->
+    <H1>Ajaxでjsonファイルを取得する練習</H1>
+    <!-- ajaxを行うきっかけとなるボタン -->
+    <button id="ajax">jsonデータ取得</button>
+    <!-- ajaxを行った結果の出力領域 -->
+    <div class="result">
+        <!-- 配列型の表示領域 -->
+        <div id="typeArray">
+            <!-- 表示内容タイトル -->
+            <p style="color: red; font-size:1.5em;">配列型の出力</p>
+        </div>  <!-- 配列型の表示領域 end -->
+        <!-- 配列型以外の表示領域 -->
+        <div id="typeOther">
+            <!-- 表示内容タイトル -->
+            <p style="color: blue; font-size:1.5em;">配列型以外の出力</p>
+        </div>  <!-- 配列型以外の表示領域 end -->
+    </div>  <!-- ajax結果の表示領域 end -->
+</body>
+</html>
