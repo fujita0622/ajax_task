@@ -1,5 +1,9 @@
+<!-- cookieにログイン状況(login_State)の値がすでにあるか判断 -->
+<!-- 値がすでにある場合 -->
 <?php if (isset($_COOKIE['login_State'])) : ?>
+  <!-- ログイン状況(login_State)の値(ログイン氏名)とログイン時の文言を表示 -->
   <p><?php echo $_COOKIE['login_State']; ?>様、ログイン済み</p>
+  <!-- クリック後ログアウトの処理を行うファイルに飛ぶボタンを設置 -->
   <button type="button" onclick="location.href='logout.php'">ログアウト</button>
   <?php exit; ?>
 <?php endif; ?>
