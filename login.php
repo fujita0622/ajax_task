@@ -1,6 +1,7 @@
 <?php if (isset($_COOKIE['login_State'])) : ?>
-  <p>ログイン成功しました。</p>
-  <p><?php echo $_COOKIE['login_State']; ?>様</p>
+  <p><?php echo $_COOKIE['login_State']; ?>様、ログイン済み</p>
+  <buttun type="buttun" value ="<?php setcookie('', '', time() - 1); ?>">
+
   <?php exit; ?>
 <?php endif; ?>
 
@@ -32,20 +33,21 @@
         // 通信に利用するHTTPメソッド：POST
         type:'POST',
         // 送信するデータ
-        data:{
+        data:{ 
           'login_id':$('#login_id').val(),
           'login_password':$('#login_password').val()
         }
-    }
-    // Ajaxリクエストが成功した時発動
-    .done(function (data) {
-      $('.result').html('OK');
-    })
-    // Ajaxリクエストが失敗した時発動
-    .fail(function (data) {
-      $('.result').html('NO');
-    })
-    );
-  });
+      })
+
+      // Ajaxリクエストが成功した時発動
+      .done(function (data) {
+        $('.result').html(data);
+      })
+      // Ajaxリクエストが失敗した時発動
+      .fail(function (data) {
+        $('.result').html(data);
+      })
+
+    }); // 
   });
  </script>
