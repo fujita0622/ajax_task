@@ -1,141 +1,107 @@
 <?php
-  try {
-    // エラーが発生したか判断するフラグを定義
-    $error_flag = 0;
-    // 身長の型判断が行われたか判断するフラグを定義 行われていない:0 行われた:1
-    $height_flag = 0;
-    // FORMから取得した値が空でないか判断する関数
-    function set_var_check($item_name, $var) {
-      // FORMから受け取った値が空、もしくは空文字列の場合
-      if (isset($var) === false OR $var === "") {
-        // "項目名(第一引数)を入力してください"と表示
-        // throw new Exception("<p style='color:#ff0000'>{$item_name}を入力してください</p>");
-        // TODO:確認用 後に消す
-        echo "<p style='color:#ff0000'>{$item_name}を入力してください</p>";
-      }
-      // 変数を戻り値として返す
-      return $var;
+  // エラーメッセージを代入する変数(配列)を定義
+  $error_messages;
+
+  // 各項目のエラーチェック関数を定義
+  require_once 'initial_constant.php';
+
+  // 各項目のエラーチェック関数を定義
+  require_once 'error_check.php';
+
+  // [FORMから値を受け取る]
+  // 氏名
+  $name = $_POST['name'];
+  $year = $_POST['year'];
+  $month = $_POST['month'];
+  $day = $_POST['day'];
+  $height = $_POST['height'];
+  $weight = $_POST['weight'];
+  $smoking_habit = $_POST['smoking_habit'];
+  $health_symptom = $_POST['health_symptom'];
+  $memo = $_POST['memo'];
+
+  // [FORMの値が空でないか検証]
+  $error_messages[] = check_set_var("名前", $name);
+  $error_messages[] = check_set_var("年", $year);
+  $error_messages[] = check_set_var("月", $month);
+  $error_messages[] = check_set_var("日", $day);
+  $error_messages[] = check_set_var("身長", $height);
+  $error_messages[] = check_set_var("体重", $weight);
+  $error_messages[] = check_set_var("喫煙習慣", $smoking_habit);
+  $error_messages[] = check_set_var("健康の気になる症状", $health_symptom);
+  $error_messages[] = check_set_var("メモ", $memo);
+
+  // [列名'birthday'用に年月日を編集]
+  // ありえない日付でないか確認
+  check_date($month, $day, $year);
+  // DBに列'birthday'に登録する形式に編集
+  $birthday = "{$year}{$month}{$day}";
+
+  // [型の変換]
+  // date関数で日付型に変換
+  $birthday = date('Y-m-d', $birthday);
+  // 整数型に変換
+  $height = intval($height);
+  $weight = intval($weight);
+  $smoking_habit = intval($smoking_habit);
+
+  // \n ではテキストエリア内では改行されないので改行コード &#13; に置き換え
+  $memo = nl2br($memo);
+  // $memo = str_replace("\n", "&#13;", $memo);
+
+  // それぞれの型を検証
+  $error_messages[] = check_string_type("名前", $name);
+  $error_messages[] = check_date_type("誕生日", $birthday);
+  $error_messages[] = check_int_type("身長", $height);
+  $error_messages[] = check_int_type("体重", $weight);
+  $error_messages[] = check_int_type("喫煙習慣", $smoking_habit);
+  $error_messages[] = check_string_type("健康の気になる症状", $health_symptom);
+  $error_messages[] = check_string_type("メモ", $memo);
+
+  // エラーメッセージは発生した場合
+  if(isset($error_messages)) {
+    // array_filter関数で null要素を削除
+    // array_values関数で配列の添字を振り直す
+    $error_messages = array_values(array_filter($error_messages));
+    // エラーメッセージが発生した分だけループ処理
+    foreach ($error_messages as $value) {
+      // エラーメッセージを表示
+      echo $value;
     }
-
-    // FORMから取得した値が文字列か判断する関数
-    function string_type_check($item_name, $var) {
-      // FORMから取得した値が文字列でない場合
-      if(!is_string($var)){
-        // "項目名(第一引数)は文字列型で入力してください"と表示
-        // throw new Exception("<p>{$item_name}は文字列型で入力してください</p>");
-        // TODO:確認用 後に消す
-        echo "<p>{$item_name}は文字列型で入力してください</p>";
-      } // if end 
-    } // string_type_check end
-
-    // FORMから取得した値が整数型か判断する関数
-    function int_type_check($item_name, $var) {
-      // FORMから取得した値が整数型でない場合
-      if(!is_int($var)){
-        // "項目名(第一引数)は整数型で入力してください"と表示
-        // throw new Exception("<p>{$item_name}は整数型で入力してください</p>");
-        // TODO:確認用 後に消す
-        echo "<p>{$item_name}は整数型で入力してください</p>";
-      } // if end 
-    } // int_type_check end
-
-    // FORMから取得した値が日付型か判断する関数
-    function date_type_check($item_name, $var) {
-      // FORMから取得した値が日付型でない場合
-      if(!strptime($var, '%Y-%m-%d')){
-        // "項目名(第一引数)は日付型で入力してください"と表示
-        // throw new Exception("<p>{$item_name}は日付型で入力してください</p>");
-        // TODO:確認用 後に消す
-        echo "<p>{$item_name}は日付型で入力してください</p>";
-      } // if end
-      if ($item_name == "身長") {
-        $height_flag = 1;
-      }
-    } // date_type_check end 
-
-    // 身長の範囲を検証する関数
-    function height_range($height) {
-      // 身長($height)が60以上　250以下ではない場合
-      if ($height < 60 OR 250 < $height) {
-        // 警告文を表示
-        // throw new Exception("<p>身長は60以上、250以下で入力して下さい</p>");
-        // TODO:確認用 後に消す
-        echo "<p>身長は60以上、250以下で入力して下さい</p>";
-      } // if end
-    } // height_range end
-
-    // [FORMから値を受け取る]
-    // 氏名
-    // FORMの値が空でないか検証
-    $name = set_var_check("名前", $_POST['name']);
-    // 年
-    $year = $_POST['year'];
-    // 月
-    $month = $_POST['month'];
-    // 日
-    $day = $_POST['day'];
-    // DBに列'birthday'に登録する形式に編集
-    $birthday = "{$year}{$month}{$day}";
-    // date関数で日付型に変換
-    $birthday = date('Y-m-d', strtotime($birthday));
-    // FORMの値が空でないか検証
-    $birthday = set_var_check("誕生日", $birthday);
-    // 身長
-    // FORMの値が空でないか検証
-    $height = set_var_check("身長", $_POST['height']);
-    // 整数型に変換
-    $height = intval($height);
-    // 体重 
-    // FORMの値が空でないか検証
-    $weight = set_var_check("体重", $_POST['weight']);
-    // 整数型に変換
-    $weight = intval($weight);
-    // 喫煙習慣
-    // FORMの値が空でないか検証
-    $smoking_habit = set_var_check("喫煙習慣", $_POST['smoking_habit']);
-    // 整数型に変換
-    $smoking_habit = intval($smoking_habit);
-    // 健康の気になる症状
-    // FORMの値が空でないか検証
-    $health_symptom = set_var_check("健康の気になる症状", $_POST['health_symptom']);
-    // メモ
-    // FORMの値が空でないか検証
-    $memo = set_var_check("メモ", $_POST['memo']);
-
-    // それぞれの型を検証
-    string_type_check("名前", $name);
-    date_type_check("誕生日", $birthday);
-    int_type_check("身長", $height);
-    int_type_check("体重", $weight);
-    int_type_check("喫煙習慣", $smoking_habit);
-    string_type_check("健康の気になる症状", $health_symptom);
-    string_type_check("メモ", $memo);
-
-    
-    // 身長の型判定が行われたか判断するフラグが1の場合
-    if ($height_flag === 1) {
-      // height_range関数で体重の制限範囲を検証
-      height_range($height);
-    }
-
-    // エラーが発生したか判断するフラグの値が0の場合
-    if ($error_flag === 0) {
-      // TODO:後でクラス化
-      // DB接続処理をまとめたファイルを読み込む
-      require 'db_connect.php';
-      // 更新するSQL文を定義
-      // TODO:後でプレースホルダに差し替え
-      $sql = "UPDATE user_health_info SET name = '{$name}', birthday = '{$birthday}', height = {$height}, weight = {$weight}, smoking_habit = {$smoking_habit}, health_symptom = '{$health_symptom}', memo = '{$memo}' WHERE user_id = 1";
-      // PDOクラスのqueryメソッドで更新するSQL文を実行する
-      $query = $db_connect -> query($sql);
-      echo "登録完了しました";
-    }
-  } catch (Exception $e) {
-    echo $e -> getmessage();
-    // エラーが発生したか判断するフラグに1を代入
-    $error_flag = 1;
   }
+  // エラーメッセージは発生しなかった場合
+  if (empty($error_messages)) {
+    // 更新するSQL文を定義
+    $sql = "UPDATE user_health_info SET name = :name, birthday = :birthday, height = :height, weight = :weight,
+           smoking_habit = :smoking_habit, health_symptom = :health_symptom, memo = :memo WHERE user_id = {$constant(USER)}";
+    // DB接続クラスを読み込み
+    $db_connect_class = require_once 'db_connect_class.php';
+    // DBに接続するクラスをインスタンス化
+    $db_connect = new connect();
+    // connectクラスの データベースに接続する pdoメソッドにアクセス
+    $db_connect = $db_connect -> pdo();
 
+    $prepare = $db_connect -> prepare($sql);
+    // 定義したSQL文を prepareメソッドでセット
+    // セットしたSQL文の 各':列名' の値を bindValueメソッドで指定
+    $prepare -> bindValue('name', $name, PDO::PARAM_STR);
+    $prepare -> bindValue('birthday', $birthday, PDO::PARAM_STR);
+    $prepare -> bindValue('height', $height, PDO::PARAM_INT);
+    $prepare -> bindValue('weight', $weight, PDO::PARAM_INT);
+    $prepare -> bindValue('smoking_habit', $smoking_habit, PDO::PARAM_INT);
+    $prepare -> bindValue('health_symptom', $health_symptom, PDO::PARAM_STR);
+    $prepare -> bindValue('memo', $memo, PDO::PARAM_STR);
+    // executeメソッドクエリを実行
+    // クエリが実行された場合
+    if($prepare -> execute()) {
+      // 登録完了文を表示
+      echo "登録完了しました";
+    // クエリが実行されない場合
+    } else {
+      // 登録失敗文を表示
+      echo "登録失敗しました";
+    }
+  }
   // 登録画面を表示
   require_once 'registration.php';
 ?>

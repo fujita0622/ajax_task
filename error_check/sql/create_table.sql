@@ -24,6 +24,6 @@ CREATE TABLE user_health_info
 )DEFAULT CHARSET = utf8;
 
 -- 練習用ユーザ登録INSERT文
-INSERT INTO user_health_info(name,birthday,height,weight,smoking_habit,helth_symptom,memo) VALUES
+INSERT INTO user_health_info(name,birthday,height,weight,smoking_habit,health_symptom,memo) VALUES
   ("藤田瞬大朗", "1992-06-22",163,53,1,"頭痛あり","目の疲れが深刻です。");
 
